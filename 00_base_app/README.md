@@ -76,7 +76,7 @@ To completely destroy the containers, use `lando destroy`.\
 To view the information of the containers, use `lando info`.\
 This is especially useful of you to see the ports for the DB connection with the container (external connection and creds):
 
-```json
+```
 { 
     service: 'database',
     urls: [],
