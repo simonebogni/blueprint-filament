@@ -141,7 +141,7 @@ DB_PASSWORD=lamp
 #  Localhost
 # DB_CONNECTION=mysql
 # DB_HOST=127.0.0.1
-# DB_PORT=3306
+# DB_PORT=23507
 # DB_DATABASE=lamp
 # DB_USERNAME=lamp
 # DB_PASSWORD=lamp
