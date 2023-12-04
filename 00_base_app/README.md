@@ -146,3 +146,6 @@ DB_PASSWORD=lamp
 # DB_USERNAME=lamp
 # DB_PASSWORD=lamp
 ```
+
+Enable the set of settings to connect with localhost.\
+Run the migration command to prepare the base database structure: `php artisan migrate`
