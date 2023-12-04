@@ -1,0 +1,23 @@
+models:
+  Customer:
+    name: string
+    surname: string index
+    email: email unique
+    softDeletes
+    relationships:
+      hasMany: Order
+  Order:
+    orderNumber: integer autoIncrement
+    deliveryAddress: string:100
+    relationships:
+      hasMany: LineItem
+      belongsTo: Customer
+  LineItem:
+    productCode: string
+    quantity: integer default:1
+    pricePerUnit: decimal:8,2 default:0.00
+    relationships:
+      belongsTo: Order
+
+controllers:
+  # ...
