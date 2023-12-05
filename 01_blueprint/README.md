@@ -196,3 +196,299 @@ So far, so good. Let's move to the controllers.
 
 ### Defining controllers
 
+Blueprint can be used to define controllers and their methods.\
+In fact, it provides out of the box a very good support for many of the most common methods.
+
+You can list controller methods by name: `index`, `create`, `store`, `show`, `edit`, `update`, and `destroy`.\
+The `resource` shorthand automatically infers the model reference based on the controller name and generates the 7 web resource actions.\
+It can also be set explicitly as `resource: web`.\
+A value of `resource: api` would generate the 5 resource actions of an API controller with the appropriate statements and responses for each action: `index`, `store`, `show`, `update`, and `destroy`.
+
+It is also possible to generate single action controllers, using the `invokable` shorthand.
+
+For each controller method, you may define multiple actions which contain a list of statements.\
+Each statement is a `key: value` pair. The list of supported keys is the following.
+
+| **Key**  | **Description**                                                                                                                                                                                                                                                                                                                                   | **Example**                                                   |
+|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------|
+| delete   | Generates an Eloquent statement for deleting a model. Blueprint uses the controller action to infer which statement to generate.                                                                                                                                                                                                                  | `delete: post`                                                |
+| dispatch | Generates a statement to dispatch a Job using the `value` to instantiate an object and pass any data. If the referenced job class does not exist, Blueprint will create one using any data to define properties and a `__construct` method which assigns them.                                                                                    | `dispatch: SyncMedia with:post`                               |
+| find     | Generates an Eloquent find statement. If the value provided is a qualified reference, Blueprint will expand the reference to determine the model. Otherwise, Blueprint will attempt to use the controller to determine the related model.                                                                                                         | `find: post.id`                                               |
+| fire     | Generates a statement to dispatch a Event using the `value` to instantiate the object and pass any data. If the referenced event class does not exist, Blueprint will create one using any data to define properties and a __construct method which assigns them.                                                                                 | `fire: NewPost with:post`                                     |
+| flash    | Generates a statement to flash data to the session. Blueprint will use the `value` as the session key and expands the reference as the session value.                                                                                                                                                                                             | `flash: post.title`                                           |
+| notify   | Generates a statement to send a Notification using the `value` to instantiate the object, specify the recipient, and pass any data. If the referenced notification class does not exist, Blueprint will create one using any data to define properties and a __construct method which assigns them.                                               | `notify: post.author ReviewPost with:post`                    |
+| query    | Generates an Eloquent query statement using `key:value` pairs provided in `value`. Keys may be any of the basic query builder methods for `where` clauses and ordering.                                                                                                                                                                           | `query: where:title where:content order:published_at limit:5` |
+| redirect | Generates a `return redirect()` statement using the value as a reference to a named route passing any data parameters.                                                                                                                                                                                                                            | `redirect: post.show with:post`                               |
+| render   | Generates a `return view()` statement for the referenced template with any additional view data as a comma separated list. When the template does not exist, Blueprint will generate the Blade template for the view.                                                                                                                             | `render: post.show with:post,foo,bar`                         |
+| resource | Generates response statement for the Resource to the referenced model. You may prefix the plural model reference with `collection` or `paginate` to return a resource collection or paginated collection, respectively. If the resource for the referenced model does not exist, Blueprint will create one using the model definition.            | `resource: paginate:users` or `resource: user`                |
+| respond  | Generates a response which returns the given `value`. If the value is an integer, Blueprint will generate the proper response() statement using the value as the status code. Otherwise, the value will be used as the name of the variable to return. When the template does not exist, Blueprint will generate the Blade template for the view. | `respond: post.show with:post`                                |
+| save     | Generates an Eloquent statement for saving a model. Blueprint uses the controller action to infer which statement to generate. For a store controller action, Blueprint will generate a Model::create() statement. Otherwise, a $model->save() statement will be generated.                                                                       | `save: post`                                                  |
+| send     | Generates a statement to send a Mailable or Notification using the `value` to instantiate the object, specify the recipient, and pass any data. If the referenced mailable class does not exist, Blueprint will create one using any data to define properties and a __construct method which assigns them.                                       | `send: ReviewPost to:post.author with:post`                   |
+| store    | Generates a statement to store data to the session. Blueprint will slugify the `value` as the session key and expands the reference as the session value.                                                                                                                                                                                         | `store: post.title`                                           |
+| update   | Generates an Eloquent update statement for a model. You may use a value of the model reference to generate a generic update statement, or a comma separated list of column names to update. When used with a resource controller, Blueprint will infer the model reference.                                                                       | `update: post` or `update: title, content, author_id`         |
+| validate | Generates a form request with rules based on the referenced model definition. You may use a value of the model reference to validate all columns, or a comma separated list of the column names to validate. Blueprint also updates the type-hint of the injected request object, as well as any PHPDoc reference.                                | `validate: post` or `validate: title, content, author_id`     |
+
+For convenience, Blueprint will use the name of a controller to infer the related model.\
+However, dot (.) syntax for more complex references is also supported.\
+This allows to define values which reference columns on other models.
+
+Note: for a more thorough explanation, please visit https://blueprint.laravelshift.com/docs/defining-controllers/.
+
+Enough with the theory, let's go back to our example!\
+We want to create resource controllers.\
+Because eventually we want to implement an admin panel, these will be web resources.
+
+Based on this information, let's modify the controller section of our `draft.yaml` file as follows:
+
+```yaml
+controllers:
+  Customer:
+    resource
+  Order:
+    resource
+  LineItem:
+    resource
+```
+
+Easy, right?\
+Then let's run the `php artisan blueprint:build` command.
+
+This will update the web routes and it will generate the following files for each entity:
+
+- app/Http/Controllers/[Name]Controller.php
+- database/factories/[Name]Factory.php
+- database/migrations/2023_12_04_235403_create_[names]_table.php
+- app/Models/[Name].php
+- tests/Feature/Http/Controllers/[Name]ControllerTest.php
+- app/Http/Requests/[Name]StoreRequest.php
+- app/Http/Requests/[Name]UpdateRequest.php
+- resources/views/[name]/index.blade.php
+- resources/views/[name]/create.blade.php
+- resources/views/[name]/show.blade.php
+- resources/views/[name]/edit.blade.php
+
+Let's take a look at the `CustomerController`.\
+We can see that Blueprint has already created all the methods for us.\
+Not only as signatures. It wrote all the base details we might need, including the type-hinting of the parameters!
+
+```php
+public function index(Request $request): View
+{
+    $customers = Customer::all();
+
+    return view('customer.index', compact('customers'));
+}
+
+public function create(Request $request): View
+{
+    return view('customer.create');
+}
+
+public function store(CustomerStoreRequest $request): RedirectResponse
+{
+    $customer = Customer::create($request->validated());
+
+    $request->session()->flash('customer.id', $customer->id);
+
+    return redirect()->route('customer.index');
+}
+
+public function show(Request $request, Customer $customer): View
+{
+    return view('customer.show', compact('customer'));
+}
+
+public function edit(Request $request, Customer $customer): View
+{
+    return view('customer.edit', compact('customer'));
+}
+
+public function update(CustomerUpdateRequest $request, Customer $customer): RedirectResponse
+{
+    $customer->update($request->validated());
+
+    $request->session()->flash('customer.id', $customer->id);
+
+    return redirect()->route('customer.index');
+}
+
+public function destroy(Request $request, Customer $customer): RedirectResponse
+{
+    $customer->delete();
+
+    return redirect()->route('customer.index');
+}
+```
+
+This is the power of Blueprint.
+
+### Generated tests
+
+For any controller action generated by Blueprint, a corresponding HTTP Test will be generated.\
+Each test will contain "arrange", "act", and "assert" code.
+
+The "arrange" section will set up any model factories, as well as mock any of the underlying Facades used within the controller action.
+
+Next, an "act" section will send the appropriate HTTP request to route with any parameters and request data for the controller action.
+
+And finally the "assert" section will verify the response as well as the behavior for any mock.
+
+While these tests are generated to be runnable out of the box, they are provided as a foundation.\
+They should always be reviewed for opportunities to strengthen their assertions, and update them as more code is written.
+
+Let's take a look at the `CustomerControllerTest`.
+
+```php
+<?php
+
+namespace Tests\Feature\Http\Controllers;
+
+use App\Models\Customer;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
+use JMac\Testing\Traits\AdditionalAssertions;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
+
+/**
+ * @see \App\Http\Controllers\CustomerController
+ */
+final class CustomerControllerTest extends TestCase
+{
+    use AdditionalAssertions, RefreshDatabase, WithFaker;
+
+    #[Test]
+    public function index_displays_view(): void
+    {
+        $customers = Customer::factory()->count(3)->create();
+
+        $response = $this->get(route('customer.index'));
+
+        $response->assertOk();
+        $response->assertViewIs('customer.index');
+        $response->assertViewHas('customers');
+    }
+
+
+    #[Test]
+    public function create_displays_view(): void
+    {
+        $response = $this->get(route('customer.create'));
+
+        $response->assertOk();
+        $response->assertViewIs('customer.create');
+    }
+
+
+    #[Test]
+    public function store_uses_form_request_validation(): void
+    {
+        $this->assertActionUsesFormRequest(
+            \App\Http\Controllers\CustomerController::class,
+            'store',
+            \App\Http\Requests\CustomerStoreRequest::class
+        );
+    }
+
+    #[Test]
+    public function store_saves_and_redirects(): void
+    {
+        $name = $this->faker->name();
+        $surname = $this->faker->word();
+        $email = $this->faker->safeEmail();
+
+        $response = $this->post(route('customer.store'), [
+            'name' => $name,
+            'surname' => $surname,
+            'email' => $email,
+        ]);
+
+        $customers = Customer::query()
+            ->where('name', $name)
+            ->where('surname', $surname)
+            ->where('email', $email)
+            ->get();
+        $this->assertCount(1, $customers);
+        $customer = $customers->first();
+
+        $response->assertRedirect(route('customer.index'));
+        $response->assertSessionHas('customer.id', $customer->id);
+    }
+
+
+    #[Test]
+    public function show_displays_view(): void
+    {
+        $customer = Customer::factory()->create();
+
+        $response = $this->get(route('customer.show', $customer));
+
+        $response->assertOk();
+        $response->assertViewIs('customer.show');
+        $response->assertViewHas('customer');
+    }
+
+
+    #[Test]
+    public function edit_displays_view(): void
+    {
+        $customer = Customer::factory()->create();
+
+        $response = $this->get(route('customer.edit', $customer));
+
+        $response->assertOk();
+        $response->assertViewIs('customer.edit');
+        $response->assertViewHas('customer');
+    }
+
+
+    #[Test]
+    public function update_uses_form_request_validation(): void
+    {
+        $this->assertActionUsesFormRequest(
+            \App\Http\Controllers\CustomerController::class,
+            'update',
+            \App\Http\Requests\CustomerUpdateRequest::class
+        );
+    }
+
+    #[Test]
+    public function update_redirects(): void
+    {
+        $customer = Customer::factory()->create();
+        $name = $this->faker->name();
+        $surname = $this->faker->word();
+        $email = $this->faker->safeEmail();
+
+        $response = $this->put(route('customer.update', $customer), [
+            'name' => $name,
+            'surname' => $surname,
+            'email' => $email,
+        ]);
+
+        $customer->refresh();
+
+        $response->assertRedirect(route('customer.index'));
+        $response->assertSessionHas('customer.id', $customer->id);
+
+        $this->assertEquals($name, $customer->name);
+        $this->assertEquals($surname, $customer->surname);
+        $this->assertEquals($email, $customer->email);
+    }
+
+
+    #[Test]
+    public function destroy_deletes_and_redirects(): void
+    {
+        $customer = Customer::factory()->create();
+
+        $response = $this->delete(route('customer.destroy', $customer));
+
+        $response->assertRedirect(route('customer.index'));
+
+        $this->assertSoftDeleted($customer);
+    }
+}
+```
+
+Pretty neat, eh? 😉
