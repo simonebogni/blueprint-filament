@@ -10,6 +10,7 @@
   * [Generating components](#generating-components)
     * [Defining models](#defining-models)
     * [Defining controllers](#defining-controllers)
+    * [Generated tests](#generated-tests)
 <!-- TOC -->
 
 ## Intro
