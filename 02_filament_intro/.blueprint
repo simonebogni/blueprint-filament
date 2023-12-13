@@ -1,0 +1,41 @@
+created:
+    - app/Http/Controllers/CustomerController.php
+    - app/Http/Controllers/OrderController.php
+    - app/Http/Controllers/LineItemController.php
+    - database/factories/CustomerFactory.php
+    - database/factories/OrderFactory.php
+    - database/factories/LineItemFactory.php
+    - database/migrations/2023_12_04_235403_create_customers_table.php
+    - database/migrations/2023_12_04_235404_create_orders_table.php
+    - database/migrations/2023_12_04_235405_create_line_items_table.php
+    - app/Models/Customer.php
+    - app/Models/Order.php
+    - app/Models/LineItem.php
+    - tests/Feature/Http/Controllers/CustomerControllerTest.php
+    - tests/Feature/Http/Controllers/OrderControllerTest.php
+    - tests/Feature/Http/Controllers/LineItemControllerTest.php
+    - app/Http/Requests/CustomerStoreRequest.php
+    - app/Http/Requests/CustomerUpdateRequest.php
+    - app/Http/Requests/OrderStoreRequest.php
+    - app/Http/Requests/OrderUpdateRequest.php
+    - app/Http/Requests/LineItemStoreRequest.php
+    - app/Http/Requests/LineItemUpdateRequest.php
+    - resources/views/customer/index.blade.php
+    - resources/views/customer/create.blade.php
+    - resources/views/customer/show.blade.php
+    - resources/views/customer/edit.blade.php
+    - resources/views/order/index.blade.php
+    - resources/views/order/create.blade.php
+    - resources/views/order/show.blade.php
+    - resources/views/order/edit.blade.php
+    - resources/views/lineItem/index.blade.php
+    - resources/views/lineItem/create.blade.php
+    - resources/views/lineItem/show.blade.php
+    - resources/views/lineItem/edit.blade.php
+updated:
+    - routes/web.php
+models:
+    User: { name: string, email: string, email_verified_at: 'datetime nullable', password: string, remember_token: 'string:100 nullable' }
+    Customer: { name: string, surname: 'string index', email: 'email unique', softdeletes: softDeletes, relationships: { hasMany: Order } }
+    Order: { orderNumber: 'integer autoIncrement', deliveryAddress: 'string:100', relationships: { hasMany: LineItem, belongsTo: Customer } }
+    LineItem: { productCode: string, quantity: 'integer default:1', pricePerUnit: 'decimal:8,2 default:0.00', relationships: { belongsTo: Order } }

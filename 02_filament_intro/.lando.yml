@@ -1,0 +1,17 @@
+name: blueprint-and-filament
+recipe: lamp
+config:
+  php: '8.2'
+  via: 'apache:2.4'
+  database: 'mysql:5.7'
+  cache: redis
+  xdebug: false
+  webroot: public
+proxy:
+  appserver:
+    - blueprintandfilament.lndo.site
+services:
+  cache:
+    type: redis
+  database:
+    portforward: 23507
